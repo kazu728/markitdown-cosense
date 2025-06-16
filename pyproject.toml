@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "markitdown-cosense"
+version = "0.1.0"
+description = "A markitdown plugin for converting Scrapbox notation to Markdown"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    { name = "kazu728", email = "kazuki.matsuo.728@gmail.com" }
+]
+keywords = ["markitdown", "scrapbox", "markdown", "converter", "plugin"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing :: Markup",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed"
+]
+requires-python = ">=3.10"
+dependencies = [
+    "markitdown>=0.1.1",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.5",
+    "ruff>=0.11.12",
+    "pytest-cov>=4.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/kazu728/markitdown-cosense"
+Repository = "https://github.com/kazu728/markitdown-cosense"
+Issues = "https://github.com/kazu728/markitdown-cosense/issues"
+
+[project.entry-points."markitdown.plugin"]
+markitdown-cosense = "markitdown_cosense"
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = [
+    "I",   # isort
+    "F",   # pyflakes
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
