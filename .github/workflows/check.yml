@@ -1,0 +1,35 @@
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Lint and format check
+        run: |
+          uv run --no-project ruff format --check src/ tests/
+          uv run --no-project ruff check src/ tests/ --output-format=github
+
+      - name: Type check
+        run: uv run pyright src/markitdown_cosense
+
+      - name: Run tests
+        run: |
+          uv run pytest -v
+          uv run markitdown --use-plugins tests/test_scrapbox_notation.txt > /dev/null
