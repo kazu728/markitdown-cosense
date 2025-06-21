@@ -33,12 +33,28 @@ dev-dependencies = [
     "pytest>=8.3.5",
     "ruff>=0.11.12",
     "pytest-cov>=4.0.0",
+    "pyright>=1.1.390",
 ]
 
 [project.urls]
 Homepage = "https://github.com/kazu728/markitdown-cosense"
 Repository = "https://github.com/kazu728/markitdown-cosense"
 Issues = "https://github.com/kazu728/markitdown-cosense/issues"
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/node_modules", "**/__pycache__", "**/.*"]
+pythonVersion = "3.10"
+pythonPlatform = "All"
+typeCheckingMode = "basic"
+useLibraryCodeForTypes = true
+reportMissingImports = "warning"
+reportMissingTypeStubs = false
+reportImportCycles = "error"
+reportUnusedImport = "warning"
+reportUnusedClass = "warning"
+reportUnusedFunction = "warning"
+reportUnusedVariable = "warning"
 
 [project.entry-points."markitdown.plugin"]
 markitdown-cosense = "markitdown_cosense"
