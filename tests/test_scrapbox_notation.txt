@@ -1,0 +1,170 @@
+Scrapbox Syntax Comprehensive Test File
+
+[* Heading Level 1]
+[** Heading Level 2]
+[*** Heading Level 3]
+[**** Heading Level 4]
+[***** Heading Level 5]
+
+Text Formatting
+[/ italic text]
+[- strikethrough text]
+[** bold text **]
+[*** bold text ***]
+[*/ bold italic text]
+[*- bold strikethrough text]
+[/- italic strikethrough text]
+
+Math Notation
+[$ E = mc^2 $]
+[$  \sum_{i=1}^{n} x_i  $]
+
+Links and Media
+[Link Title https://example.com]
+[https://example.com Reverse Link Title]
+[img https://example.com/image.jpg]
+[https://example.com/picture.png]
+[YouTube https://www.youtube.com/watch?v=dQw4w9WgXcQ]
+[Twitter https://twitter.com/user/status/123456789]
+
+URL Auto-linking
+Normal URL: https://example.com
+Non-HTTPS URL: http://legacy.example.com
+
+Blockquotes
+> This is a blockquote
+>Multiple lines of
+>blockquote text
+
+List Structure
+ List item 1
+  Nested list item 1-1
+   Further nested item 1-1-1
+    4th level nested item
+  Nested list item 1-2
+ List item 2
+	Tab indented item
+　Full-width space indented item
+ List item 3
+
+Code Blocks (Programming Languages)
+code:python
+def hello_world():
+    print("Hello, World!")
+    return 42
+
+code:javascript
+const greeting = "Hello, World!";
+console.log(greeting);
+
+code:typescript
+interface User {
+    name: string;
+    age: number;
+}
+
+code:bash
+#!/bin/bash
+echo "Hello, World!"
+ls -la
+
+code:json
+{
+    "name": "example",
+    "version": "1.0.0",
+    "dependencies": {}
+}
+
+LaTeX Math Blocks
+Mathematical expression test
+code:tex
+V(X) = E((X-μ)^2)
+σ = √V(X)
+E(X) = μ
+
+Complex formulas
+code:tex
+\sum_{i=1}^{n} x_i = x_1 + x_2 + ... + x_n
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+
+Code Blocks in Lists
+ Programming examples
+  Python
+   code:python
+    import numpy as np
+    def variance(x):
+        return np.var(x)
+  JavaScript
+   code:js
+    const mean = arr => arr.reduce((a, b) => a + b) / arr.length;
+
+LaTeX in Lists
+ Statistics
+  Variance definition
+   code:tex
+   V(X) = E((X-μ)^2)
+  Standard deviation
+   code:tex
+   σ = √V(X)
+
+Table Notation
+table:User Information
+ Name Age Occupation
+ John 25 Engineer
+ Jane 30 Designer
+ Bob 28 Manager
+
+table:Statistical Data
+ Item Value Note
+ Mean 75.2 Score
+ Variance 12.8 Spread
+ StdDev 3.58 Standard deviation
+
+Mixed Content
+[** Data Analysis Procedure]
+ Data Collection
+  CSV file loading
+   code:python
+    import pandas as pd
+    df = pd.read_csv('data.csv')
+ Statistical Calculation
+  Variance calculation formula
+   code:tex
+   V(X) = \frac{1}{n}\sum_{i=1}^{n}(x_i - \bar{x})^2
+  Implementation example
+   code:python
+    variance = df['column'].var()
+ Result Visualization
+  Chart creation
+   code:python
+    import matplotlib.pyplot as plt
+    plt.hist(df['column'])
+    plt.show()
+
+Special Characters and Escaping
+{ curly braces }
+[ square brackets ]
+Normal text with [mixed] brackets
+
+Image Embedding
+[img https://example.com/chart.png]
+![Existing Markdown image](https://example.com/existing.jpg)
+
+Multi-line Code Blocks (with empty lines)
+code:python
+def complex_function():
+    # Comment
+    x = 1
+    
+    # Code with empty lines
+    y = 2
+    
+    return x + y
+
+LaTeX with Non-Math Text (should not be treated as math)
+code:tex
+E(X) = μ
+This is the definition of expected value
+V(X) = σ^2
+
+End of test file
