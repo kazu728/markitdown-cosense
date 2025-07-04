@@ -628,20 +628,18 @@ def register_converters(markitdown: MarkItDown, **kwargs) -> None:
         The MarkItDown instance to register converters with.
     **kwargs : dict, optional
         Additional configuration options:
-        tag_handling : str, default "keep"
+        tag_handling : str, default "comment"
             How to handle Scrapbox tag notation [tag].
     """
-    if not isinstance(markitdown, MarkItDown):
-        raise ConfigurationError(ERROR_MESSAGES["invalid_markitdown"])
 
-    tag_handling = kwargs.get("tag_handling", "keep")
+    tag_handling = kwargs.get("tag_handling", "comment")
     try:
         tag_handling_enum = TagHandling(tag_handling)
     except ValueError as e:
         logger.warning(
             ERROR_MESSAGES["invalid_tag_handling"].format(option=tag_handling, error=e)
         )
-        tag_handling_enum = TagHandling.KEEP
+        tag_handling_enum = TagHandling.COMMENT
 
     markitdown.register_converter(MarkdownConverter(tag_handling=tag_handling_enum))
 
@@ -649,7 +647,7 @@ def register_converters(markitdown: MarkItDown, **kwargs) -> None:
 class MarkdownConverter(DocumentConverter):
     """Main converter class for Scrapbox to Markdown conversion."""
 
-    def __init__(self, tag_handling: TagHandling = TagHandling.KEEP):
+    def __init__(self, tag_handling: TagHandling = TagHandling.COMMENT):
         self.tag_handling = tag_handling
         self.pattern_processor = PatternProcessor(tag_handling, IMAGE_EXTENSIONS)
 
