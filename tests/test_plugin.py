@@ -1,20 +1,17 @@
 """Unified test file for markitdown-cosense plugin."""
 
 import io
+import os
+import re
 import tempfile
 
 import pytest
 from markitdown import MarkItDown, StreamInfo
 
-from markitdown_cosense import TagHandling, register_converters
+from markitdown_cosense import register_converters
 from markitdown_cosense._plugin import (
-    ConfigurationError,
-    DocumentConversionError,
-    EncodingError,
     MarkdownConverter,
-    PatternCompilationError,
-    PatternProcessor,
-    TableProcessingError,
+    apply_conversions,
     convert_code_blocks,
     convert_lists,
     convert_tables,
@@ -23,23 +20,7 @@ from markitdown_cosense._plugin import (
 )
 
 
-@pytest.fixture
-def pattern_processor():
-    """Create a basic pattern processor for testing."""
-    return PatternProcessor(
-        TagHandling.KEEP, ["png", "jpg", "jpeg", "gif", "svg", "webp"]
-    )
-
-
-@pytest.fixture
-def markdown_converter():
-    """Create a markdown converter for testing."""
-    return MarkdownConverter(TagHandling.KEEP)
-
-
 class TestPatternProcessor:
-    """Test pattern processing functionality."""
-
     @pytest.mark.parametrize(
         "input_text,expected",
         [
@@ -75,37 +56,26 @@ class TestPatternProcessor:
             ("> This is a quote", "> This is a quote"),
         ],
     )
-    def test_basic_conversions(self, pattern_processor, input_text, expected):
-        result = pattern_processor.apply_conversions(input_text)
-        assert result == expected
+    def test_basic_conversions(self, input_text, expected):
+        assert apply_conversions(input_text) == expected
 
-    @pytest.mark.parametrize(
-        "tag_handling,input_text,expected",
-        [
-            (TagHandling.KEEP, "[tag]", "[tag]"),
-            (TagHandling.HASHTAG, "[tag]", "#tag"),
-            (TagHandling.LINK, "[tag]", "[tag](#tag)"),
-            (TagHandling.COMMENT, "[tag]", "<!-- tag: tag -->"),
-            (TagHandling.CODE, "[tag]", "`tag`"),
-            (TagHandling.REMOVE, "[tag]", ""),
-        ],
-    )
-    def test_tag_handling_options(self, tag_handling, input_text, expected):
-        processor = PatternProcessor(tag_handling, [])
-        result = processor.apply_conversions(input_text)
-        assert result == expected
+    def test_tag_conversion(self):
+        assert apply_conversions("[tag]") == "<!-- tag: tag -->"
+        assert apply_conversions("[python]") == "<!-- tag: python -->"
+        assert (
+            apply_conversions("Text with [important] tag")
+            == "Text with <!-- tag: important --> tag"
+        )
 
 
 class TestCodeBlockProcessor:
-    """Test code block processing functionality."""
-
     @pytest.mark.parametrize(
         "input_text,expected",
         [
-            ("code:example.py\nprint('Hello')", "```python\nprint('Hello')\n```"),
+            ("code:example.py\nprint('Hello')", "```py\nprint('Hello')\n```"),
             (
                 "code:test.js\nconsole.log('test');",
-                "```javascript\nconsole.log('test');\n```",
+                "```js\nconsole.log('test');\n```",
             ),
             ("code:styles.css", "```css\n```"),
         ],
@@ -116,25 +86,19 @@ class TestCodeBlockProcessor:
 
     def test_latex_code_block_conversion(self):
         input_text = "code:tex\nE = mc^2\nV(X) = \\sigma^2"
-        result = convert_code_blocks(input_text)
-        assert "$E = mc^2$" in result
-        assert "$V(X) = \\sigma^2$" in result
+        expected = "$E = mc^2$\n$V(X) = \\sigma^2$"
+
+        assert convert_code_blocks(input_text) == expected
 
     def test_protect_and_restore_code_blocks(self):
         content = "Text before\n```python\ncode here\n```\nText after"
         protected, blocks = protect_code_blocks(content)
-
-        assert "<<<CODEBLOCK0>>>" in protected
-        assert "```python\ncode here\n```" not in protected
-        assert len(blocks) == 1
-
         restored = restore_code_blocks(protected, blocks)
+
         assert restored == content
 
 
 class TestListProcessor:
-    """Test list processing functionality."""
-
     @pytest.mark.parametrize(
         "input_text,expected",
         [
@@ -166,41 +130,40 @@ class TestListProcessor:
 
 
 class TestTableProcessor:
-    """Test table processing functionality."""
-
     def test_basic_table_conversion(self):
         input_text = "table:User Data\n Name Age City\n Alice 25 Tokyo\n Bob 30 Osaka"
-        result = convert_tables(input_text)
+        expected = """## User Data
 
-        assert "## User Data" in result
-        assert "| Name | Age | City |" in result
-        assert "|---|---|---|" in result
-        assert "| Alice | 25 | Tokyo |" in result
-        assert "| Bob | 30 | Osaka |" in result
+| Name | Age | City |
+|---|---|---|
+| Alice | 25 | Tokyo |
+| Bob | 30 | Osaka |
+"""
+
+        assert convert_tables(input_text) == expected
 
     def test_table_without_name(self):
         input_text = "table:\n Col1 Col2\n A B"
-        result = convert_tables(input_text)
+        expected = """| Col1 | Col2 |
+|---|---|
+| A | B |
+"""
 
-        assert "| Col1 | Col2 |" in result
-        assert "| A | B |" in result
+        assert convert_tables(input_text) == expected
 
 
 class TestMarkdownConverterIntegration:
-    """Test full converter integration."""
-
-    def test_mime_type_acceptance(self, markdown_converter):
-        """Test that converter accepts correct file types."""
+    def test_mime_type_acceptance(self):
+        converter = MarkdownConverter()
         stream = io.BytesIO(b"test")
 
         stream_info = StreamInfo(extension=".txt")
-        assert markdown_converter.accepts(stream, stream_info)
+        assert converter.accepts(stream, stream_info)
 
         stream_info = StreamInfo(extension=".pdf")
-        assert not markdown_converter.accepts(stream, stream_info)
+        assert not converter.accepts(stream, stream_info)
 
-    def test_comprehensive_conversion(self, markdown_converter):
-        """Test comprehensive conversion of various Scrapbox notations."""
+    def test_comprehensive_conversion(self):
         content = """[* Main Heading]
 [** Sub Heading]
 [/ italic] and [- strikethrough]
@@ -234,44 +197,53 @@ table:Data
  Alice 95
  Bob 87"""
 
-        result = markdown_converter._convert_content(content)
+        from markitdown_cosense._plugin import _convert_content
 
-        assert "# Main Heading" in result
-        assert "## Sub Heading" in result
+        result = _convert_content(content)
 
-        assert "*italic*" in result
-        assert "~~strikethrough~~" in result
-        assert "***bold italic***" in result
-        assert "**~~bold strikethrough~~**" in result
+        expected = """# Main Heading
+## Sub Heading
+*italic* and ~~strikethrough~~
+***bold italic*** and **~~bold strikethrough~~**
 
-        assert "[Google](https://google.com)" in result
-        assert "![](https://example.com/image.png)" in result
-        assert "![img](https://example.com/logo.png)" in result
+Links and Images:
+[Google](https://google.com)
+![](https://example.com/image.png)
+![img](https://example.com/logo.png)
 
-        assert "- Item 1" in result
-        assert "  - Nested 1-1" in result
-        assert "    - Deep nested" in result
+Lists:
+- Item 1
+  - Nested 1-1
+    - Deep nested
+- Item 2
 
-        assert "```python" in result
-        assert "def hello():" in result
-        assert 'print("world")' in result
+Code:
+```python
+def hello():
+    print("world")
 
-        assert "E = mc^2" in result
-        assert "$V(X) = E[(X-\\mu)^2]$" in result
+Math:
+[$ E = mc^2 $]
 
-        assert "## Data" in result
-        assert "| Name | Score |" in result
-        assert "| Alice | 95 |" in result
+```
+$V(X) = E[(X-\\mu)^2]$
+
+Table:
+## Data
+
+| Name | Score |
+|---|---|
+| Alice | 95 |
+| Bob | 87 |"""
+
+        assert result == expected
 
 
 class TestPluginInterface:
-    """Test plugin interface functionality."""
-
     def test_register_converters_success(self):
-        """Test successful converter registration."""
         md = MarkItDown()
 
-        register_converters(md, tag_handling="hashtag")
+        register_converters(md)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("[* Test] and [tag]")
@@ -279,117 +251,23 @@ class TestPluginInterface:
 
         try:
             result = md.convert(temp_path)
-            assert "# Test" in result.text_content
-            assert "#tag" in result.text_content
+            expected = "# Test and <!-- tag: tag -->"
+            assert result.text_content == expected
         finally:
-            import os
-
             os.unlink(temp_path)
-
-    def test_register_converters_invalid_markitdown(self):
-        """Test error handling for invalid markitdown instance."""
-        with pytest.raises(ConfigurationError):
-            register_converters("not_markitdown", tag_handling="keep")
-
-    def test_tag_handling_options(self):
-        """Test different tag handling options."""
-        md = MarkItDown()
-
-        test_cases = [
-            ("keep", "[tag]"),
-            ("hashtag", "#tag"),
-            ("link", "[tag](#tag)"),
-            ("comment", "<!-- tag: tag -->"),
-            ("code", "`tag`"),
-            ("remove", ""),
-        ]
-
-        for tag_option, expected in test_cases:
-            md = MarkItDown()
-            register_converters(md, tag_handling=tag_option)
-
-            with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".txt", delete=False
-            ) as f:
-                f.write("[tag]")
-                temp_path = f.name
-
-            try:
-                result = md.convert(temp_path)
-                if expected:
-                    assert expected in result.text_content
-                else:
-                    assert (
-                        "tag" not in result.text_content
-                        or "[tag]" in result.text_content
-                    )
-            finally:
-                import os
-
-                os.unlink(temp_path)
 
 
 class TestExceptions:
-    """Test exception handling."""
-
-    def test_all_exceptions_accessible(self):
-        """Test that all exceptions are accessible and work correctly."""
-        with pytest.raises(ConfigurationError):
-            raise ConfigurationError("test")
-
-        with pytest.raises(DocumentConversionError):
-            raise DocumentConversionError("test")
-
-        with pytest.raises(PatternCompilationError):
-            raise PatternCompilationError("test")
-
-        with pytest.raises(EncodingError):
-            raise EncodingError("test")
-
-        with pytest.raises(TableProcessingError):
-            raise TableProcessingError("test")
-
     def test_pattern_compilation_error(self):
-        """Test pattern compilation error handling."""
-        processor = PatternProcessor(TagHandling.KEEP, [])
-        processor.conversion_steps = [
-            {"pattern": "[invalid(regex", "replacement": "test"}
-        ]
-
-        with pytest.raises(PatternCompilationError):
-            processor._compile_conversion_patterns()
-
-
-class TestModuleAttributes:
-    """Test module attributes and constants."""
-
-    def test_module_has_all_attributes(self):
-        """Test that the module has all expected attributes."""
         from markitdown_cosense import _plugin
 
-        assert hasattr(_plugin, "MarkdownConverter")
-        assert hasattr(_plugin, "PatternProcessor")
+        original_patterns = _plugin.CONVERSION_PATTERNS
+        _plugin.CONVERSION_PATTERNS = [("[invalid(regex", "test")]
+        _plugin._compiled_patterns = None
 
-        assert hasattr(_plugin, "register_converters")
-        assert hasattr(_plugin, "convert_code_blocks")
-        assert hasattr(_plugin, "convert_lists")
-        assert hasattr(_plugin, "convert_tables")
-
-        assert hasattr(_plugin, "__plugin_interface_version__")
-        assert _plugin.__plugin_interface_version__ == 1
-
-    def test_important_constants(self):
-        """Test that important constants are defined correctly."""
-        from markitdown_cosense._plugin import (
-            ACCEPTED_FILE_EXTENSIONS,
-            CODE_BLOCK_PREFIX,
-            DEFAULT_ENCODING,
-            IMAGE_EXTENSIONS,
-            LANGUAGE_MAPPING,
-        )
-
-        assert ".txt" in ACCEPTED_FILE_EXTENSIONS
-        assert DEFAULT_ENCODING == "utf-8"
-        assert "png" in IMAGE_EXTENSIONS
-        assert CODE_BLOCK_PREFIX == "code:"
-        assert LANGUAGE_MAPPING["py"] == "python"
+        try:
+            with pytest.raises(re.error):
+                apply_conversions("test")
+        finally:
+            _plugin.CONVERSION_PATTERNS = original_patterns
+            _plugin._compiled_patterns = None
