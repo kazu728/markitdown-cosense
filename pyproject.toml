@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "markitdown-cosense"
 version = "0.1.0"
-description = "A markitdown plugin for converting Scrapbox notation to Markdown"
+description = "A markitdown plugin for converting Cosense notation to Markdown"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -15,6 +15,23 @@ keywords = ["markitdown", "scrapbox", "markdown", "converter", "plugin"]
 requires-python = ">=3.10"
 dependencies = [
     "markitdown>=0.1.1",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.11.12",
+    "pyright>=1.1.390",
 ]
 
 [project.urls]
@@ -26,12 +43,7 @@ Issues = "https://github.com/kazu728/markitdown-cosense/issues"
 markitdown-cosense = "markitdown_cosense"
 
 [tool.uv]
-dev-dependencies = [
-    "pytest>=8.3.5",
-    "ruff>=0.11.12",
-    "pytest-cov>=4.0.0",
-    "pyright>=1.1.390",
-]
+dev-dependencies = ["markitdown-cosense[dev]"]
 
 [tool.pyright]
 include = ["src"]
@@ -54,12 +66,13 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
-testpaths = ["tests"]
+testpaths = ["tests/unit", "tests/integration"]
 
 [tool.ruff.lint]
 select = [
     "I",   # isort
     "F",   # pyflakes
+    "UP",  # pyupgrade
 ]
 
 [tool.ruff.format]
