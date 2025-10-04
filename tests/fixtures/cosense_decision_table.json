@@ -1,0 +1,165 @@
+{
+  "inline": [
+    {
+      "id": "tag_annotation",
+      "source": ["[tag]"],
+      "expected": ["<!-- tag: tag -->"]
+    },
+    {
+      "id": "inline_image_tagged",
+      "source": ["[img https://example.com/image.jpg]"],
+      "expected": ["![img](https://example.com/image.jpg)"]
+    },
+    {
+      "id": "inline_image_auto",
+      "source": ["[https://example.com/image.png]"],
+      "expected": ["![](https://example.com/image.png)"]
+    },
+    {
+      "id": "labeled_link_forward",
+      "source": ["[Label https://example.com]"],
+      "expected": ["[Label](https://example.com)"]
+    },
+    {
+      "id": "labeled_link_reverse",
+      "source": ["[https://example.com Label]"],
+      "expected": ["[Label](https://example.com)"]
+    },
+    {
+      "id": "bare_url_autolink",
+      "source": ["Plain https://example.com text"],
+      "expected": ["Plain <https://example.com> text"]
+    },
+    {
+      "id": "inline_markup_variants",
+      "source": ["[/ italic] and [- strike]"],
+      "expected": ["*italic* and ~~strike~~"]
+    },
+    {
+      "id": "youtube_link",
+      "source": ["[YouTube https://youtu.be/dQw4w9WgXcQ]"],
+      "expected": ["[YouTube Video](https://youtu.be/dQw4w9WgXcQ)"]
+    },
+    {
+      "id": "preformatted_autolink",
+      "source": ["<https://example.com>"],
+      "expected": ["<https://example.com>"]
+    }
+  ],
+  "headings_and_paragraphs": [
+    {
+      "id": "heading_levels",
+      "source": ["[* Title]", "[** Subtitle]", "[*** Section]", "[**** Subsection]", "[***** Mini]"],
+      "expected": ["# Title", "## Subtitle", "### Section", "#### Subsection", "##### Mini"]
+    },
+    {
+      "id": "paragraph_preserves_text",
+      "source": ["Multi-line", "paragraph with [tag] and [/ emphasis]"],
+      "expected": ["Multi-line", "paragraph with <!-- tag: tag --> and *emphasis*"]
+    }
+  ],
+  "code_and_math": [
+    {
+      "id": "code_directive_language_inference",
+      "source": ["code:example.py", "print('hello')"],
+      "expected": ["```py", "print('hello')", "```"]
+    },
+    {
+      "id": "fenced_code_preserved",
+      "source": ["```python", "print('[tag] inside code')", "```", "[tag]"],
+      "expected": ["```python", "print('[tag] inside code')", "```", "<!-- tag: tag -->"]
+    },
+    {
+      "id": "math_block_conversion",
+      "source": ["code:tex", "E = mc^2", "V(X) = \\sigma^2"],
+      "expected": ["$E = mc^2$", "$V(X) = \\sigma^2$"]
+    }
+  ],
+  "lists_and_tables": [
+    {
+      "id": "nested_lists",
+      "source": [" Item 1", "  Sub-item 1.1", "   Sub-sub-item", "  Sub-item 1.2", " Item 2"],
+      "expected": ["- Item 1", "  - Sub-item 1.1", "    - Sub-sub-item", "  - Sub-item 1.2", "- Item 2"]
+    },
+    {
+      "id": "table_rendering",
+      "source": ["table:Users", " Name Age City", " Alice 30 Tokyo", " Bob 25 Osaka"],
+      "expected": ["## Users", "", "| Name | Age | City |", "|---|---|---|", "| Alice | 30 | Tokyo |", "| Bob | 25 | Osaka |"]
+    }
+  ],
+  "integration": [
+    {
+      "id": "full_document",
+      "source": [
+        "[* Main Heading]",
+        "[** Sub Heading]",
+        "[/ italic] and [- strikethrough]",
+        "[*/ bold italic] and [*- bold strikethrough]",
+        "",
+        "Links and Images:",
+        "[Google https://google.com]",
+        "[https://example.com/image.png]",
+        "[img https://example.com/logo.png]",
+        "",
+        "Lists:",
+        " Item 1",
+        "  Nested 1-1",
+        "   Deep nested",
+        " Item 2",
+        "",
+        "Code:",
+        "code:python",
+        "def hello():",
+        "    print(\"world\")",
+        "",
+        "Math:",
+        "[$ E = mc^2 $]",
+        "",
+        "code:tex",
+        "V(X) = E[(X-\\mu)^2]",
+        "",
+        "Table:",
+        "table:Data",
+        " Name Score",
+        " Alice 95",
+        " Bob 87"
+      ],
+      "expected": [
+        "# Main Heading",
+        "## Sub Heading",
+        "*italic* and ~~strikethrough~~",
+        "***bold italic*** and **~~bold strikethrough~~**",
+        "",
+        "Links and Images:",
+        "[Google](https://google.com)",
+        "![](https://example.com/image.png)",
+        "![img](https://example.com/logo.png)",
+        "",
+        "Lists:",
+        "- Item 1",
+        "  - Nested 1-1",
+        "    - Deep nested",
+        "- Item 2",
+        "",
+        "Code:",
+        "```python",
+        "def hello():",
+        "    print(\"world\")",
+        "```",
+        "",
+        "Math:",
+        "[$ E = mc^2 $]",
+        "",
+        "$V(X) = E[(X-\\mu)^2]$",
+        "",
+        "Table:",
+        "## Data",
+        "",
+        "| Name | Score |",
+        "|---|---|",
+        "| Alice | 95 |",
+        "| Bob | 87 |"
+      ]
+    }
+  ]
+}
