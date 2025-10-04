@@ -32,4 +32,4 @@ jobs:
       - name: Run tests
         run: |
           uv run pytest -v
-          uv run markitdown --use-plugins tests/test_scrapbox_notation.txt > /dev/null
+          uv run markitdown --use-plugins tests/test_cosense_notation.txt > /dev/null

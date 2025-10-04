@@ -11,7 +11,7 @@ license = {text = "MIT"}
 authors = [
     { name = "kazu728", email = "kazuki.matsuo.728@gmail.com" }
 ]
-keywords = ["markitdown", "scrapbox", "markdown", "converter", "plugin"]
+keywords = ["markitdown", "cosense", "markdown", "converter", "plugin"]
 requires-python = ">=3.10"
 dependencies = [
     "markitdown>=0.1.1",
