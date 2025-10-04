@@ -1,35 +1,46 @@
-name: Check
+name: ci
 
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  check:
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+      - run: |
+          uv sync --extra dev
+          uv run ruff format --check src tests
+          uv run ruff check src tests --output-format=github
 
-      - name: Install dependencies
-        run: uv sync
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: |
+          uv sync --extra dev
+          uv run pyright
 
-      - name: Lint and format check
-        run: |
-          uv run --no-project ruff format --check src/ tests/
-          uv run --no-project ruff check src/ tests/ --output-format=github
-
-      - name: Type check
-        run: uv run pyright src/markitdown_cosense
-
-      - name: Run tests
-        run: |
-          uv run pytest -v
-          uv run markitdown --use-plugins tests/test_cosense_notation.txt > /dev/null
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: |
+          uv sync --extra dev
+          uv run pytest
+          uv run markitdown --use-plugins tests/test_cosense_notation.txt > /tmp/out.md
